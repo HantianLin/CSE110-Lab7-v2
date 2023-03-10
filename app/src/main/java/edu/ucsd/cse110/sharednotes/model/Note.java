@@ -14,20 +14,6 @@ import com.google.gson.stream.JsonWriter;
 
 import java.time.Instant;
 
-class TimestampAdapter extends TypeAdapter<Long> {
-    @Override
-    public void write(JsonWriter out, Long value) throws java.io.IOException {
-        var instant = Instant.ofEpochSecond(value);
-        out.value(instant.toString());
-    }
-
-    @Override
-    public Long read(JsonReader in) throws java.io.IOException {
-        var instant = Instant.parse(in.nextString());
-        return instant.getEpochSecond();
-    }
-}
-
 @Entity(tableName = "notes")
 public class Note {
     /** The title of the note. Used as the primary key for shared notes (even on the cloud). */
@@ -46,8 +32,7 @@ public class Note {
      * Defaults to 0 (Jan 1, 1970), so that if a note already exists remotely, its content is
      * always preferred to a new empty note.
      */
-    @JsonAdapter(TimestampAdapter.class)
-    @SerializedName(value = "updated_at", alternate = "updatedAt")
+    @SerializedName(value = "version")
     public long version = 0;
 
     /** General constructor for a note. */
@@ -58,10 +43,10 @@ public class Note {
     }
 
     @Ignore
-    public Note(@NonNull String title, @NonNull String content, long updatedAt) {
+    public Note(@NonNull String title, @NonNull String content, long version) {
         this.title = title;
         this.content = content;
-        this.version = updatedAt;
+        this.version = version;
     }
 
     public static Note fromJSON(String json) {

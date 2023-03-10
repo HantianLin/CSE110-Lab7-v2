@@ -84,7 +84,7 @@ public class NoteRepository {
     }
 
     public void upsertLocal(Note note) {
-        note.version = note.version+1;
+        note.version = note.version + 1;
         dao.upsert(note);
     }
 
