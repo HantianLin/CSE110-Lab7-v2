@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,7 @@ public class NoteRepository {
     private final NoteDao dao;
 
     private final NoteAPI api;
-    private ScheduledFuture<?> noteFuture;
+    private Future<?> noteFuture;
     private final MutableLiveData<Note> realNoteData;
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
@@ -122,13 +123,13 @@ public class NoteRepository {
 
     public void upsertRemote(Note note) {
         // TODO: Implement upsertRemote!
-        var executor = Executors.newSingleThreadScheduledExecutor();
-        noteFuture = executor.scheduleAtFixedRate(() -> {
+        var executor = Executors.newSingleThreadExecutor();
+        noteFuture = (Future<?>) executor.submit(() -> {
             JsonObject json = new JsonObject();
-            json.addProperty("content",note.content);
-            json.addProperty("updated_at",note.updatedAt);
+            json.addProperty("content", note.content);
+            json.addProperty("updated_at", note.updatedAt);
 
-            api.putNote(note.title, RequestBody.create(JSON,json.toString()));
-            realNoteData.postValue(note);
-        }, 0, 3000, TimeUnit.MILLISECONDS);    }
+            api.putNote(note.title, RequestBody.create(JSON, json.toString()));
+        });
+    }
 }
