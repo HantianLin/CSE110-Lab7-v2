@@ -4,6 +4,12 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.Observer;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 import com.google.gson.JsonObject;
 
@@ -20,9 +26,9 @@ import okhttp3.RequestBody;
 
 public class NoteRepository {
     private final NoteDao dao;
-
     private final NoteAPI api;
     private Future<?> noteFuture;
+    private ScheduledFuture<?> poller;
     private final MutableLiveData<Note> realNoteData;
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
@@ -33,7 +39,6 @@ public class NoteRepository {
         realNoteData = new MutableLiveData<>();
     }
 
-
     // Synced Methods
     // ==============
 
@@ -42,7 +47,6 @@ public class NoteRepository {
      * updated when the note is updated either locally or remotely on the server. Our activities
      * however will only need to observe this one LiveData object, and don't need to care where
      * it comes from!
-     *
      * This method will always prefer the newest version of the note.
      *
      * @param title the title of the note
@@ -55,7 +59,7 @@ public class NoteRepository {
             var ourNote = note.getValue();
             if (theirNote == null) return; // do nothing
             if (ourNote == null || ourNote.version < theirNote.version) {
-                upsertLocal(theirNote);
+                upsertLocal(theirNote, false);
             }
         };
 
@@ -83,9 +87,15 @@ public class NoteRepository {
         return dao.getAll();
     }
 
-    public void upsertLocal(Note note) {
+    public void upsertLocal(Note note, boolean incrementVersion) {
+        // We don't want to increment when we sync from the server, just when we save.
+        if (incrementVersion) note.version = note.version + 1;
         note.version = note.version + 1;
         dao.upsert(note);
+    }
+
+    public void upsertLocal(Note note) {
+        upsertLocal(note, true);
     }
 
     public void deleteLocal(Note note) {
@@ -114,6 +124,13 @@ public class NoteRepository {
         // Start by fetching the note from the server _once_ and feeding it into MutableLiveData.
         // Then, set up a background thread that will poll the server every 3 seconds.
 
+        // Cancel any previous poller if it exists.
+        if (this.poller != null && !this.poller.isCancelled()) {
+            poller.cancel(true);
+        }
+
+        // Set up a background thread that will poll the server every 3 seconds.
+
         // You may (but don't have to) want to cache the LiveData's for each title, so that
         // you don't create a new polling thread every time you call getRemote with the same title.
         // You don't need to worry about killing background threads.
@@ -131,5 +148,6 @@ public class NoteRepository {
 
             api.putNote(note.title, RequestBody.create(JSON, json.toString()));
         });
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }

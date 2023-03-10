@@ -74,7 +74,6 @@ public class NoteAPI {
         // We can use future.get(1, SECONDS) to wait for the result.
         return future;
     }
-
     @WorkerThread
     public Note getNote(String title) {
         // URLs cannot contain spaces, so we replace them with %20.

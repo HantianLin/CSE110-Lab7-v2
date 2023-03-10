@@ -20,7 +20,6 @@ import okhttp3.MediaType;
 public class NoteViewModel extends AndroidViewModel {
     private LiveData<Note> note;
     private final NoteRepository repo;
-    private ScheduledFuture<?> noteFuture;
 
     public NoteViewModel(@NonNull Application application) {
         super(application);
@@ -28,7 +27,6 @@ public class NoteViewModel extends AndroidViewModel {
         var db = NoteDatabase.provide(context);
         var dao = db.getDao();
         NoteAPI api  = NoteAPI.provide(); //added
-
         this.repo = new NoteRepository(dao,api);
     }
 
