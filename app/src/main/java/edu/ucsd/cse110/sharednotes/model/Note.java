@@ -48,20 +48,20 @@ public class Note {
      */
     @JsonAdapter(TimestampAdapter.class)
     @SerializedName(value = "updated_at", alternate = "updatedAt")
-    public long updatedAt = 0;
+    public long version = 0;
 
     /** General constructor for a note. */
     public Note(@NonNull String title, @NonNull String content) {
         this.title = title;
         this.content = content;
-        this.updatedAt = 0;
+        this.version = 0;
     }
 
     @Ignore
     public Note(@NonNull String title, @NonNull String content, long updatedAt) {
         this.title = title;
         this.content = content;
-        this.updatedAt = updatedAt;
+        this.version = updatedAt;
     }
 
     public static Note fromJSON(String json) {

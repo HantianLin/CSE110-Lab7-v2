@@ -54,7 +54,7 @@ public class NoteRepository {
         Observer<Note> updateFromRemote = theirNote -> {
             var ourNote = note.getValue();
             if (theirNote == null) return; // do nothing
-            if (ourNote == null || ourNote.updatedAt < theirNote.updatedAt) {
+            if (ourNote == null || ourNote.version < theirNote.version) {
                 upsertLocal(theirNote);
             }
         };
@@ -84,7 +84,7 @@ public class NoteRepository {
     }
 
     public void upsertLocal(Note note) {
-        note.updatedAt = Instant.now().getEpochSecond();
+        note.version = note.version+1;
         dao.upsert(note);
     }
 
@@ -127,7 +127,7 @@ public class NoteRepository {
         noteFuture = (Future<?>) executor.submit(() -> {
             JsonObject json = new JsonObject();
             json.addProperty("content", note.content);
-            json.addProperty("updated_at", note.updatedAt);
+            json.addProperty("version", note.version + 1);
 
             api.putNote(note.title, RequestBody.create(JSON, json.toString()));
         });
